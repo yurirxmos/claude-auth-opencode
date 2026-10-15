@@ -1,6 +1,6 @@
 # claude-auth-opencode
 
-🇺🇸 English · [🇧🇷 Português (pt-BR)](https://github.com/yurirxmos/claude-auth-opencode/blob/main/README.pt-BR.md)
+🇺🇸 English · [🇧🇷 Português](https://github.com/yurirxmos/claude-auth-opencode/blob/main/README.pt-BR.md)
 
 OpenCode V2 plugin that uses your Claude Code session to access Anthropic models, without a separate API key.
 

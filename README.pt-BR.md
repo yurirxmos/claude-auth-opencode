@@ -27,8 +27,6 @@ opencode plugin add claude-auth-opencode
 opencode service restart
 ```
 
-Se você usava `opencode-claude-auth@latest`, remova-o: ele não funciona no OpenCode V2.
-
 ### Desenvolvimento
 
 Para testar a partir do código-fonte, clone o repositório, compile e aponte o plugin para o caminho local em `~/.config/opencode/opencode.json`:

@@ -36,7 +36,6 @@
     "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run check && npm run test && npm run build"
   },
   "dependencies": {

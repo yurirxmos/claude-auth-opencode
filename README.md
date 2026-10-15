@@ -61,7 +61,7 @@ Aponte `plugins` em `~/.config/opencode/opencode.json` para a raiz do repositór
 }
 ```
 
-A instalação do repositório executa `prepare`, que compila `dist/`. Se alterar o código, rode `bun run build` antes de reiniciar o serviço.
+O `dist/` vem versionado para que a instalação pelo Git funcione sem compilar. Ao alterar o código, rode `bun run build` e commite o `dist/` junto.
 
 Se você usava `opencode-claude-auth@latest`, remova-o: ele é incompatível com o OpenCode V2.
 

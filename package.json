@@ -1,0 +1,50 @@
+{
+  "name": "claude-auth-opencode",
+  "version": "0.1.0",
+  "description": "OpenCode V2 plugin that authenticates the Anthropic provider with an existing Claude Code OAuth session.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "claude-auth-opencode": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "index.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "anthropic",
+    "claude",
+    "claude-code",
+    "oauth"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run check && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.0.29"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

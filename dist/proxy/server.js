@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createServer, } from "node:http";
+import { CLAUDE_CREDENTIALS_EXPIRED_MESSAGE } from "../auth.js";
 import { LONG_CONTEXT_BETAS, buildClaudeCodeHeaders, transformClaudeCodeBody, } from "../protocol/claudeCode.js";
 const ANTHROPIC_UPSTREAM = process.env.ANTHROPIC_UPSTREAM_URL ?? "https://api.anthropic.com";
 function readRequestBody(request) {
@@ -50,6 +51,16 @@ function isLongContextBetaError(body) {
     return (body.includes("long context beta is not yet available") ||
         body.includes("Extra usage is required for long context requests"));
 }
+function sendAuthenticationError(response) {
+    response.writeHead(401, { "content-type": "application/json" });
+    response.end(JSON.stringify({
+        type: "error",
+        error: {
+            type: "authentication_error",
+            message: CLAUDE_CREDENTIALS_EXPIRED_MESSAGE,
+        },
+    }));
+}
 export async function startAnthropicProxy(credentialStore, options = {}) {
     const sessionID = randomUUID();
     const upstreamBaseURL = options.upstreamBaseURL ?? ANTHROPIC_UPSTREAM;
@@ -58,14 +69,7 @@ export async function startAnthropicProxy(credentialStore, options = {}) {
         try {
             const credentials = await credentialStore.getValidCredentials();
             if (!credentials) {
-                response.writeHead(401, { "content-type": "application/json" });
-                response.end(JSON.stringify({
-                    type: "error",
-                    error: {
-                        type: "authentication_error",
-                        message: "Claude Code OAuth credentials were not found or are expired. Run `claude` to authenticate again.",
-                    },
-                }));
+                sendAuthenticationError(response);
                 return;
             }
             const rawBody = await readRequestBody(request);
@@ -83,6 +87,14 @@ export async function startAnthropicProxy(credentialStore, options = {}) {
             });
             let upstream = await send();
             let bufferedBody;
+            if (upstream.status === 401) {
+                // The access token can be revoked before its local expiration. Do
+                // not keep serving it from the cache after Anthropic rejects it.
+                credentialStore.clear();
+                await upstream.text();
+                sendAuthenticationError(response);
+                return;
+            }
             if (upstream.status === 400) {
                 bufferedBody = await upstream.text();
                 if (isLongContextBetaError(bufferedBody)) {

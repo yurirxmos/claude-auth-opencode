@@ -1,12 +1,11 @@
 import type { ClaudeCredentials } from "./credentials/index.js";
+import { CLAUDE_CREDENTIALS_EXPIRED_MESSAGE } from "./auth.js";
 
 export function describeCredentials(
 	credentials: ClaudeCredentials | undefined,
 ): string[] {
 	if (!credentials) {
-		return [
-			"Credenciais do Claude Code não encontradas ou expiradas. Rode `claude` para autenticar.",
-		];
+		return [CLAUDE_CREDENTIALS_EXPIRED_MESSAGE];
 	}
 
 	const expiration =

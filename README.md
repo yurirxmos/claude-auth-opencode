@@ -18,7 +18,10 @@ Check your credentials at any time:
 npx claude-auth-opencode doctor
 ```
 
-When the token expires, run `claude` again to renew it.
+When the token expires, OpenCode will prompt you to run `/claude-renew`. The
+command opens Claude Code to renew the session. In most cases, simply starting
+it renews the token silently; if the session cannot be renewed, Claude Code
+will ask you to sign in in the browser.
 
 ## Installation
 

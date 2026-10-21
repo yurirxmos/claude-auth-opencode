@@ -7,6 +7,7 @@ import {
 } from "node:http";
 
 import type { CredentialStore } from "../credentials/index.js";
+import { CLAUDE_CREDENTIALS_EXPIRED_MESSAGE } from "../auth.js";
 import {
 	LONG_CONTEXT_BETAS,
 	buildClaudeCodeHeaders,
@@ -96,6 +97,19 @@ function isLongContextBetaError(body: string): boolean {
 	);
 }
 
+function sendAuthenticationError(response: ServerResponse): void {
+	response.writeHead(401, { "content-type": "application/json" });
+	response.end(
+		JSON.stringify({
+			type: "error",
+			error: {
+				type: "authentication_error",
+				message: CLAUDE_CREDENTIALS_EXPIRED_MESSAGE,
+			},
+		}),
+	);
+}
+
 export async function startAnthropicProxy(
 	credentialStore: CredentialStore,
 	options: AnthropicProxyOptions = {},
@@ -109,17 +123,7 @@ export async function startAnthropicProxy(
 			try {
 				const credentials = await credentialStore.getValidCredentials();
 				if (!credentials) {
-					response.writeHead(401, { "content-type": "application/json" });
-					response.end(
-						JSON.stringify({
-							type: "error",
-							error: {
-								type: "authentication_error",
-								message:
-									"Claude Code OAuth credentials were not found or are expired. Run `claude` to authenticate again.",
-							},
-						}),
-					);
+					sendAuthenticationError(response);
 					return;
 				}
 
@@ -148,6 +152,15 @@ export async function startAnthropicProxy(
 
 				let upstream = await send();
 				let bufferedBody: string | undefined;
+
+				if (upstream.status === 401) {
+					// The access token can be revoked before its local expiration. Do
+					// not keep serving it from the cache after Anthropic rejects it.
+					credentialStore.clear();
+					await upstream.text();
+					sendAuthenticationError(response);
+					return;
+				}
 
 				if (upstream.status === 400) {
 					bufferedBody = await upstream.text();

@@ -1,8 +1,7 @@
+import { CLAUDE_CREDENTIALS_EXPIRED_MESSAGE } from "./auth.js";
 export function describeCredentials(credentials) {
     if (!credentials) {
-        return [
-            "Credenciais do Claude Code não encontradas ou expiradas. Rode `claude` para autenticar.",
-        ];
+        return [CLAUDE_CREDENTIALS_EXPIRED_MESSAGE];
     }
     const expiration = credentials.expiresAt === undefined
         ? "não informada"

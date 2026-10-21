@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { createDefaultCredentialStore } from "./credentials/index.js";
 import { describeCredentials } from "./status.js";
-
-const PACKAGE_NAME = "claude-auth-opencode";
+import { PACKAGE_NAME } from "./update.js";
 
 async function runDoctor(): Promise<number> {
 	const credentials =

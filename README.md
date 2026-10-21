@@ -30,6 +30,21 @@ opencode plugin add claude-auth-opencode
 opencode service restart
 ```
 
+### Updates
+
+When OpenCode starts, the plugin checks for a new version, installs it in the
+background, and asks whether to restart the service to apply it. To get only a
+notice without automatic installation, disable it in
+`~/.config/opencode/opencode.json`:
+
+```jsonc
+{
+  "plugins": [
+    { "package": "claude-auth-opencode", "options": { "autoUpdate": false } }
+  ]
+}
+```
+
 ### Development
 
 To test from source, clone the repository, build it, and point the plugin to the local path in `~/.config/opencode/opencode.json`:

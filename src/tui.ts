@@ -3,6 +3,12 @@ import { spawn } from "node:child_process";
 import { Plugin } from "@opencode/plugin/tui";
 
 import { CLAUDE_RENEW_COMMAND } from "./auth.js";
+import {
+	PACKAGE_NAME,
+	findAvailableUpdate,
+	installUpdate,
+	restartOpenCodeService,
+} from "./update.js";
 
 function runDetached(command: string, arguments_: readonly string[]): Promise<void> {
 	return new Promise((resolve, reject) => {
@@ -70,9 +76,69 @@ async function openClaudeCode(): Promise<void> {
 	await runDetached("x-terminal-emulator", ["-e", "claude"]);
 }
 
+const UPDATE_TITLE = "Atualização do claude-auth-opencode";
+const MANUAL_UPDATE_STEPS = `Rode \`opencode plugin update ${PACKAGE_NAME}\` e depois \`opencode service restart\`.`;
+
+async function checkForUpdate(
+	context: Plugin.Context,
+	autoUpdate: boolean,
+): Promise<void> {
+	const update = await findAvailableUpdate();
+	if (!update) return;
+
+	if (!autoUpdate) {
+		context.ui.toast.show({
+			title: UPDATE_TITLE,
+			message: `Versão ${update.latest} disponível (instalada: ${update.current}). ${MANUAL_UPDATE_STEPS}`,
+			variant: "info",
+			duration: 15_000,
+		});
+		return;
+	}
+
+	try {
+		await installUpdate();
+	} catch {
+		context.ui.toast.show({
+			title: UPDATE_TITLE,
+			message: `Não foi possível instalar a versão ${update.latest} automaticamente. ${MANUAL_UPDATE_STEPS}`,
+			variant: "warning",
+			duration: 15_000,
+		});
+		return;
+	}
+
+	const restart = await context.ui.dialog.confirm({
+		title: UPDATE_TITLE,
+		message: `Versão ${update.latest} instalada. Reiniciar o serviço do OpenCode agora para aplicá-la? Respostas em andamento serão interrompidas.`,
+		label: { confirm: "Reiniciar agora", cancel: "Depois" },
+	});
+	if (!restart) {
+		context.ui.toast.show({
+			title: UPDATE_TITLE,
+			message: "A nova versão será aplicada quando você rodar `opencode service restart`.",
+			variant: "info",
+		});
+		return;
+	}
+
+	try {
+		await restartOpenCodeService();
+	} catch {
+		context.ui.toast.show({
+			title: UPDATE_TITLE,
+			message: "Não foi possível reiniciar automaticamente. Rode `opencode service restart`.",
+			variant: "warning",
+			duration: 15_000,
+		});
+	}
+}
+
 const plugin = Plugin.define({
 	id: "claude-auth-opencode.tui",
 	setup(context) {
+		void checkForUpdate(context, context.options.autoUpdate !== false);
+
 		context.keymap.layer(() => ({
 			mode: "global",
 			commands: [
